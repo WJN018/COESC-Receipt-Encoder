@@ -18,32 +18,44 @@
 <body>
 
 <div class="vault-container">
-    <h1>📂 Official Receipt Vault (2026)</h1>
-    <button class="refresh-btn" onclick="fetchRecords()">🔄 Refresh List</button>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>📂 Official Receipt Vault (2026)</h1>
+        <button class="btn-back" onclick="window.location.href='index.html'">⬅ Back to Encoder</button>
+    </div>
     
-    <table>
-        <thead>
-            <tr>
-                <th>Code (A)</th>
-                <th>Date (B)</th>
-                <th>Received From (C)</th>
-                <th>Amount (D)</th>
-                <th>Description (F)</th>
-                <th>Received By (G)</th>
-                <th>Order No (H)</th>
-                <th>Merch (I)</th>
-                <th>Mode (J)</th>
-                <th>Balance (K)</th>
-            </tr>
-        </thead>
-        <tbody id="vault-body">
-            <tr><td colspan="10" style="text-align:center;">Click Refresh to load data...</td></tr>
-        </tbody>
-    </table>
-</div>
+    <div class="controls">
+        <button class="refresh-btn" onclick="fetchRecords()">🔄 Refresh List</button>
+    </div>
+    
+    ```
 
+### 2. Update the Records Page CSS
+Add these styles to the `<style>` section of your `records.html` to make the button look consistent with your design:
+
+```css
+.btn-back {
+    background: #6c757d; /* Gray color to match your 'Clear' button */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-back:hover {
+    background: #5a6268;
+    transform: translateX(-3px);
+}
+
+.controls {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
 <script>
-    const SCRIPT_URL = 'YOUR_SAME_APPS_SCRIPT_URL_HERE';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_E5rdVdJIyjxgvzo_cKd2BN8o_sCpg-R4xOxFpT0Fzfk-MPyLX-FkR1wm3KDv5d_o/exec';
 
     function fetchRecords() {
         const body = document.getElementById('vault-body');
