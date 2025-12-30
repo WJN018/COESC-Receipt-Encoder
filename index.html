@@ -171,459 +171,184 @@ th{background:var(--primary);color:#fff;}
 let rNum = parseInt(localStorage.getItem('rNum')) || 1;
 let oNum = parseInt(localStorage.getItem('oNum')) || 1;
 let isEditing = false;
+let receipts = JSON.parse(localStorage.getItem('coesc_receipts')) || [];
+
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_E5rdVdJIyjxgvzo_cKd2BN8o_sCpg-R4xOxFpT0Fzfk-MPyLX-FkR1wm3KDv5d_o/exec';
+
+const pos = {
+    f_code: [23.25, 31.23], f_date: [22.7, 83.9], f_from: [34.7, 61.7], 
+    f_amtWord: [46.3, 40.8], f_amtNum: [45.6, 89.4], f_desc: [57.2, 62.3], 
+    f_ord: [75, 22], f_merch: [83, 22], f_qty: [90.7, 22], 
+    f_bal: [90.3, 49.8], f_down: [75, 41], f_full: [83, 41], f_by: [87.4, 77.7]
+};
 
 window.onload = function() {
-    console.log("App loaded. Generating IDs...");
-    
-    // Force the IDs to appear immediately
-    genIds(); 
-    
-    // Load your Google Sheets records list
-    if (typeof refreshList === "function") refreshList();
+    init();
 };
-  /* ================= 1. POSITIONS LOGIC ================= */
-const pos = {
-  f_code: [23.25, 31.23], 
-  f_date: [22.7, 83.9], 
-  f_from: [34.7, 61.7], 
-  f_amtWord: [46.3, 40.8], 
-  f_amtNum: [45.6, 89.4], 
-  f_desc: [57.2, 62.3], 
-  f_ord: [75, 22], 
-  f_merch: [83, 22], 
-  f_qty: [90.7, 22], 
-  f_bal: [90.3, 49.8], 
-  f_down: [75, 41], 
-  f_full: [83, 41], 
-  f_by: [87.4, 77.7]
-};
-
-function applyPositions() {
-  Object.keys(pos).forEach(id => {
-    const e = document.getElementById(id);
-    if (e) {
-      e.style.top = pos[id][0] + '%';
-      e.style.left = pos[id][1] + '%';
-    }
-  });
-}
-
-/* ================= 2. DATA MANAGEMENT ================= */
-let receipts = JSON.parse(localStorage.getItem('coesc_receipts')) || [];
-let lastSavedIndex = -1; // FIXED SYNTAX ERROR HERE
 
 function init() {
-  // Load the HD image into the img tag
-  document.getElementById('hd-bg').src = receiptBase64;
-  
-  // Clear the CSS background if it's still there
-  document.getElementById('receipt-container').style.background = "none";
+    // Set HD Background
+    const bg = document.getElementById('hd-bg');
+    if (bg && typeof receiptBase64 !== 'undefined') bg.src = receiptBase64;
+    document.getElementById('receipt-container').style.background = "none";
 
-  date.value = new Date().toISOString().split('T')[0];
-  genIds(); render(); applyPositions(); toggleFields();
+    // Set Default Date
+    const dateInput = document.getElementById('date');
+    if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+
+    genIds();
+    applyPositions();
+    toggleFields();
+    refreshList();
+}
+
+function applyPositions() {
+    Object.keys(pos).forEach(id => {
+        const e = document.getElementById(id);
+        if (e) {
+            e.style.top = pos[id][0] + '%';
+            e.style.left = pos[id][1] + '%';
+        }
+    });
 }
 
 function genIds() {
-    if (typeof isEditing !== 'undefined' && isEditing) return;
-
+    if (isEditing) return;
     const receiptField = document.getElementById('receiptCode');
     const orderField = document.getElementById('orderNo');
     const categoryField = document.getElementById('category');
-    const descField = document.getElementById('desc');
 
-    // THIS LINE sets the Receipt Code instantly
-    if (receiptField) {
-        receiptField.value = "COESC-2026-" + String(rNum).padStart(4, '0');
-    }
+    if (receiptField) receiptField.value = "COESC-2026-" + String(rNum).padStart(4, '0');
 
-    // Handle Merchandise Defaults
-    if (categoryField && categoryField.value === "Merchandise") {
-        if (orderField && !orderField.value) {
-            orderField.value = "ORD-" + String(oNum).padStart(3, '0');
-        }
-        if (descField) {
-            descField.value = "Merchandise";
-        }
+    if (categoryField.value === "Merchandise") {
+        if (orderField && !orderField.value) orderField.value = "ORD-" + String(oNum).padStart(3, '0');
     } else {
         if (orderField) orderField.value = "";
     }
-    
-    if (typeof syncReceipt === "function") syncReceipt();
+    syncReceipt();
 }
+
 function toggleFields() {
-  var isMerch = category.value === 'Merchandise';
-
-  // FORM visibility
-  merchFields.style.display = isMerch ? 'grid' : 'none';
-
-  // Description behavior
-  if (isMerch) {
-    desc.value = 'MERCHANDISE';
-    desc.readOnly = true;
-    desc.classList.add('read-only');
+    const isMerch = document.getElementById('category').value === 'Merchandise';
+    document.getElementById('merchFields').style.display = isMerch ? 'grid' : 'none';
     
-    // RE-FILL the Order Number on the receipt when switching back
-    f_ord.textContent = orderNo.value; 
-  } else {
-    desc.value = '';
-    desc.readOnly = false;
-    desc.classList.remove('read-only');
-  }
-
-  // RECEIPT VISIBILITY
-  setReceiptVisibility(isMerch);
-
-  syncReceipt();
+    const descField = document.getElementById('desc');
+    if (isMerch) {
+        descField.value = 'MERCHANDISE';
+        descField.readOnly = true;
+        descField.classList.add('read-only');
+    } else {
+        descField.readOnly = false;
+        descField.classList.remove('read-only');
+    }
+    syncReceipt();
 }
 
-function setReceiptVisibility(isMerch) {
-  // Order + merch info display style
-  f_ord.style.display   = isMerch ? 'block' : 'none';
-  f_merch.style.display = isMerch ? 'block' : 'none';
-  f_qty.style.display   = isMerch ? 'block' : 'none';
-  f_bal.style.display   = isMerch ? 'block' : 'none';
-
-  // Payment checkmarks
-  f_down.style.display  = isMerch ? 'block' : 'none';
-  f_full.style.display  = isMerch ? 'block' : 'none';
-
-  if (!isMerch) {
-    // Clear text to avoid ghost data when in "Others" mode
-    f_ord.textContent = '';
-    f_merch.textContent = '';
-    f_qty.textContent = '';
-    f_bal.textContent = '';
-    f_down.textContent = '';
-    f_full.textContent = '';
-  }
-}
-
-/* ================= 3. RECEIPT SYNC ================= */
 function toWords(num) {
-  if (!num || num === 0) return "ZERO";
-  const ones = ["","ONE","TWO","THREE","FOUR","FIVE","SIX","SEVEN","EIGHT","NINE"];
-  const teens = ["TEN","ELEVEN","TWELVE","THIRTEEN","FOURTEEN","FIFTEEN","SIXTEEN","SEVENTEEN","EIGHTEEN","NINETEEN"];
-  const tens = ["","","TWENTY","THIRTY","FORTY","FIFTY","SIXTY","SEVENTY","EIGHTY","NINETY"];
-  
-  function convert(n) {
-    if (n < 10) return ones[n];
-    if (n < 20) return teens[n - 10];
-    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
-    if (n < 1000) return ones[Math.floor(n / 100)] + " HUNDRED" + (n % 100 ? " AND " + convert(n % 100) : "");
-    return "";
-  }
-  
-  let res = "";
-  if (num >= 1000) { res += convert(Math.floor(num / 1000)) + " THOUSAND "; num %= 1000; }
-  if (num > 0) res += convert(num);
-  return res.trim().toUpperCase();
+    if (!num || num == 0) return "ZERO";
+    const ones = ["","ONE","TWO","THREE","FOUR","FIVE","SIX","SEVEN","EIGHT","NINE"];
+    const teens = ["TEN","ELEVEN","TWELVE","THIRTEEN","FOURTEEN","FIFTEEN","SIXTEEN","SEVENTEEN","EIGHTEEN","NINETEEN"];
+    const tens = ["","","TWENTY","THIRTY","FORTY","FIFTY","SIXTY","SEVENTY","EIGHTY","NINETY"];
+    function convert(n) {
+        if (n < 10) return ones[n];
+        if (n < 20) return teens[n - 10];
+        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+        if (n < 1000) return ones[Math.floor(n / 100)] + " HUNDRED" + (n % 100 ? " AND " + convert(n % 100) : "");
+        return "";
+    }
+    let res = "";
+    if (num >= 1000) { res += convert(Math.floor(num / 1000)) + " THOUSAND "; num %= 1000; }
+    if (num > 0) res += convert(num);
+    return res.trim().toUpperCase();
 }
 
 function syncReceipt() {
-  const d = new Date(date.value);
-  f_date.textContent = (d.getMonth() + 1) + "/" + d.getDate();
-  f_from.textContent = receivedFrom.value.toUpperCase();
-  f_by.textContent = receivedBy.value.toUpperCase();
-  f_desc.textContent = desc.value.toUpperCase();
-  f_code.textContent = receiptCode.value.split('-').pop(); // Show only number part on receipt? Or full code
+    const d = new Date(document.getElementById('date').value);
+    document.getElementById('f_date').textContent = (d.getMonth() + 1) + "/" + d.getDate();
+    document.getElementById('f_from').textContent = document.getElementById('receivedFrom').value.toUpperCase();
+    document.getElementById('f_by').textContent = document.getElementById('receivedBy').value.toUpperCase();
+    document.getElementById('f_desc').textContent = document.getElementById('desc').value.toUpperCase();
+    document.getElementById('f_code').textContent = document.getElementById('receiptCode').value.split('-').pop();
 
-  if (category.value === 'Merchandise') {
-    f_ord.textContent = orderNo.value;
-    f_merch.textContent = merchItem.value.toUpperCase();
-    f_qty.textContent = qty.value;
-    f_bal.textContent = balance.value ? "₱ " + Number(balance.value).toFixed(2) : "";
-    f_down.textContent = modeDown.checked ? "✔" : "";
-    f_full.textContent = modeFull.checked ? "✔" : "";
-  } else {
-    f_ord.textContent = "";
-    f_merch.textContent = "";
-    f_qty.textContent = "";
-    f_bal.textContent = "";
-    f_down.textContent = "";
-    f_full.textContent = "";
-  }
-
-  f_amtNum.textContent = amount.value ? Number(amount.value).toFixed(2) : "0.00";
-  f_amtWord.textContent = amount.value ? toWords(Math.floor(amount.value)) : "ZERO";
-
-  // THIS IS CRITICAL: RE-APPLY POSITIONS EVERY TIME DATA CHANGES
-  applyPositions();
-}
-
-/* ================= 4. SAVE & ACTIONS ================= */
-function saveReceipt(){
- const data = {
-  code:receiptCode.value, date:date.value, from:receivedFrom.value,
-  amt:amount.value, desc:desc.value, by:receivedBy.value,
-  merch:merchItem.value, qty:qty.value, bal:balance.value,
-  down:modeDown.checked, full:modeFull.checked, cat:category.value
- };
- receipts.push(data);
- lastSavedIndex = receipts.length - 1;
- rNum++; 
- if(category.value==='Merchandise') oNum++;
- 
- localStorage.setItem('coesc_receipts', JSON.stringify(receipts));
- localStorage.setItem('coesc_next_receipt', rNum);
- localStorage.setItem('coesc_next_order', oNum);
- 
- genIds(); render(); resetForm(false);
-}
-
-function render() {
-    const listElement = document.getElementById('receipt-list'); // Change to your actual ID
-    listElement.innerHTML = "<li>Loading records...</li>";
-
-    fetch(SCRIPT_URL)
-        .then(response => response.json())
-        .then(data => {
-            listElement.innerHTML = ""; // Clear loading message
-            data.reverse().forEach(record => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <b>${record.receiptCode}</b><br>
-                    <small>${record.receivedFrom} - ₱${record.amountInNumber}</small>
-                `;
-                li.onclick = () => loadReceiptIntoView(record); // Function to show it on the receipt
-                listElement.appendChild(li);
-            });
-        })
-        .catch(err => {
-            listElement.innerHTML = "<li>Error loading data</li>";
-            console.error(err);
-        });
-}
-
-function editReceipt(i) {
-  const r = receipts[i];
-  category.value = r.cat || 'Merchandise';
-  receivedFrom.value = r.from;
-  amount.value = r.amt;
-  desc.value = r.desc;
-  receivedBy.value = r.by;
-  merchItem.value = r.merch || '';
-  qty.value = r.qty || 1;
-  balance.value = r.bal || '';
-  modeDown.checked = r.down;
-  modeFull.checked = r.full;
-  receiptCode.value = r.code;
-
-  receipts.splice(i, 1);
-  toggleFields(); // Ensure correct fields show
-  alert("Record loaded. Update and click Save.");
-}
-
-function deleteReceipt(i) {
-  if (confirm("Delete this record?")) {
-    receipts.splice(i, 1);
-    localStorage.setItem('coesc_receipts', JSON.stringify(receipts));
-    render();
-  }
-}
-
-function resetForm(full=true){
- receivedFrom.value=amount.value=receivedBy.value=merchItem.value=balance.value='';
- qty.value=1; modeDown.checked=modeFull.checked=false;
- if(full) syncReceipt();
-}
-
-function printRow(i){
- const r = receipts[i];
- // Load data purely for printing without editing the form
- f_code.textContent = r.code.split('-').pop(); // or r.code
- f_date.textContent = new Date(r.date).getMonth()+1 + "/" + new Date(r.date).getDate();
- f_from.textContent = r.from.toUpperCase();
- f_amtNum.textContent = Number(r.amt).toFixed(2);
- f_amtWord.textContent = toWords(Math.floor(r.amt));
- f_desc.textContent = r.desc.toUpperCase();
- f_by.textContent = r.by.toUpperCase();
- 
- if(r.cat === 'Merchandise') {
-   f_merch.textContent = r.merch ? r.merch.toUpperCase() : '';
-   f_qty.textContent = r.qty;
-   f_bal.textContent = r.bal ? "₱ " + Number(r.bal).toFixed(2) : "";
-   f_down.textContent = r.down ? "✔" : "";
-   f_full.textContent = r.full ? "✔" : "";
-   // Assuming order no is not saved in object but generated. 
-   // If you want to save order no, you need to add it to saveReceipt
-   f_ord.textContent = ""; 
- } else {
-   f_ord.textContent=f_merch.textContent=f_qty.textContent=f_bal.textContent=f_down.textContent=f_full.textContent="";
- }
- applyPositions();
- setTimeout(() => window.print(), 500);
-}
-
-function finalPrint(){
-  window.print();
-}
-
-function downloadImage() {
-  const receipt = document.getElementById('receipt-container');
-  
-  // Use scale: 5 for extreme "Retina" crispness
-  html2canvas(receipt, {
-    scale: 5, 
-    allowTaint: true,
-    useCORS: true,
-    logging: false,
-    backgroundColor: null,
-    imageTimeout: 0
-  }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = (receiptCode.value || 'Receipt') + '.png';
-    link.href = canvas.toDataURL('image/png', 1.0); // 1.0 is 100% quality
-    link.click();
-  });
-}
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_E5rdVdJIyjxgvzo_cKd2BN8o_sCpg-R4xOxFpT0Fzfk-MPyLX-FkR1wm3KDv5d_o/exec';
-
-function saveToSheets(receiptData) {
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors', // Important for Google Apps Script
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(receiptData)
-    })
-    .then(() => {
-        alert("Saved to Google Sheets!");
-        // You can still keep your localStorage logic here if you want a local backup
-    })
-    .catch(error => console.error('Error!', error.message));
-}
-
-  function prepareDataForSheets() {
-    // Ipunin ang Merch Table items
-    const rows = document.querySelectorAll('#merch-body tr');
-    let merchSummary = "";
-    
-    rows.forEach(row => {
-        const qty = row.cells[0].innerText;
-        const desc = row.cells[1].innerText;
-        const amt = row.cells[2].innerText;
-        if(desc !== "") {
-            merchSummary += `${qty}x ${desc} (${amt}); `;
-        }
-    });
-
-    const receiptData = {
-        receiptCode: document.getElementById('receiptCode').value,
-        date: document.getElementById('date').value,
-        receivedFrom: document.getElementById('receivedFrom').value,
-        amountInWords: document.getElementById('amountInWords').value,
-        amountInNumber: document.getElementById('amountNum').value,
-        receiptType: document.querySelector('input[name="receiptType"]:checked')?.value || "N/A",
-        by: document.getElementById('by').value,
-        merchDetails: merchSummary // Ito yung pinagsama-samang items
-    };
-
-    saveToSheets(receiptData);
-}
-
-  async function saveAndSync() {
-    // Collect Merch Rows
-    let merchSummary = "";
-    document.querySelectorAll('#merch-body tr').forEach(row => {
-        const qty = row.cells[0]?.innerText || "";
-        const item = row.cells[1]?.innerText || "";
-        if(item.trim() !== "") merchSummary += `${qty}x ${item} | `;
-    });
-
-    // Checkbox logic
-    const modes = [];
-    if(document.getElementById('downpayment').checked) modes.push("Downpayment");
-    if(document.getElementById('fullpayment').checked) modes.push("Full Payment");
-
-    const payload = {
-        receiptCode: document.getElementById('receiptCode').value,
-        date: document.getElementById('date').value,
-        receivedFrom: document.getElementById('receivedFrom').value,
-        amountInNumber: document.getElementById('amountNum').value,
-        amountInWords: document.getElementById('amountWords').value,
-        description: document.getElementById('description').value,
-        receivedBy: document.getElementById('receivedBy').value,
-        orderNumber: document.getElementById('orderCode').value || "N/A",
-        merch: merchSummary,
-        modeOfPayment: modes.join(" & "),
-        balance: document.getElementById('balanceNum').value || "0"
-    };
-
-    // Save to Google
-    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-
-    // Update global counters ONLY if it's a new entry
-    if (!isEditing) {
-        rNum++;
-        if (payload.orderNumber !== "N/A") oNum++;
-        localStorage.setItem('rNum', rNum);
-        localStorage.setItem('oNum', oNum);
+    const isMerch = document.getElementById('category').value === 'Merchandise';
+    if (isMerch) {
+        document.getElementById('f_ord').textContent = document.getElementById('orderNo').value;
+        document.getElementById('f_merch').textContent = document.getElementById('merchItem').value.toUpperCase();
+        document.getElementById('f_qty').textContent = document.getElementById('qty').value;
+        document.getElementById('f_bal').textContent = document.getElementById('balance').value ? "₱ " + Number(document.getElementById('balance').value).toFixed(2) : "";
+        document.getElementById('f_down').textContent = document.getElementById('modeDown').checked ? "✔" : "";
+        document.getElementById('f_full').textContent = document.getElementById('modeFull').checked ? "✔" : "";
+    } else {
+        ["f_ord", "f_merch", "f_qty", "f_bal", "f_down", "f_full"].forEach(id => document.getElementById(id).textContent = "");
     }
 
-    alert("Sync Complete!");
-    isEditing = false;
-    location.reload(); // Refresh to update the list
+    const amt = document.getElementById('amount').value;
+    document.getElementById('f_amtNum').textContent = amt ? Number(amt).toFixed(2) : "0.00";
+    document.getElementById('f_amtWord').textContent = amt ? toWords(Math.floor(amt)) : "ZERO";
+    applyPositions();
 }
 
-  function refreshList() {
-    const listTable = document.getElementById('records');
-    if (!listTable) return;
+async function saveReceipt() {
+    const category = document.getElementById('category').value;
+    const data = {
+        receiptCode: document.getElementById('receiptCode').value,
+        date: document.getElementById('date').value,
+        receivedFrom: document.getElementById('receivedFrom').value,
+        amountInNumber: document.getElementById('amount').value,
+        amountInWords: toWords(Math.floor(document.getElementById('amount').value)),
+        description: document.getElementById('desc').value,
+        receivedBy: document.getElementById('receivedBy').value,
+        orderNumber: document.getElementById('orderNo').value || "N/A",
+        merch: document.getElementById('merchItem').value || "N/A",
+        modeOfPayment: document.getElementById('modeFull').checked ? "Full Payment" : "Downpayment",
+        balance: document.getElementById('balance').value || "0"
+    };
 
-    listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>🔄 Loading Records...</td></tr>";
+    if (!data.receivedFrom) return alert("Please enter a name.");
+
+    try {
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+        
+        if (!isEditing) {
+            rNum++;
+            if (category === 'Merchandise') oNum++;
+            localStorage.setItem('rNum', rNum);
+            localStorage.setItem('oNum', oNum);
+        }
+
+        alert("Saved to Cloud!");
+        isEditing = false;
+        resetForm();
+        genIds();
+        refreshList();
+    } catch (e) {
+        alert("Error saving: " + e.message);
+    }
+}
+
+function refreshList() {
+    const listTable = document.getElementById('records');
+    listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>🔄 Syncing...</td></tr>";
 
     fetch(SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
-            listTable.innerHTML = ""; 
-            
-            if (!data || data.length === 0) {
-                listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No records found in Cloud.</td></tr>";
-                return;
-            }
-
-            // Shows newest receipts at the top
+            listTable.innerHTML = "";
             data.reverse().forEach(rec => {
-                const row = document.createElement('tr');
-                
-                // Logic to show Merch details or Description in the "Desc" column
-                let detailText = (rec.orderNumber && rec.orderNumber !== "N/A") 
-                    ? `<strong>${rec.orderNumber}</strong>: ${rec.merch}` 
-                    : rec.description;
-
-                row.innerHTML = `
-                    <td>
-                        <strong>${rec.receiptCode}</strong><br>
-                        <small>${new Date(rec.date).toLocaleDateString()}</small>
-                    </td>
+                const row = `<tr>
+                    <td><strong>${rec.receiptCode}</strong></td>
                     <td>${rec.receivedFrom}</td>
-                    <td>
-                        ₱${parseFloat(rec.amountInNumber).toLocaleString()}<br>
-                        <small style="color: ${rec.balance > 0 ? 'red' : 'green'};">
-                            Bal: ₱${rec.balance}
-                        </small>
-                    </td>
-                    <td>
-                        ${detailText}<br>
-                        <small><i>By: ${rec.receivedBy}</i></small>
-                    </td>
-                    <td>
-                        <button class="view-btn" onclick='viewRecord(${JSON.stringify(rec)})'>View</button>
-                    </td>
-                `;
-                listTable.appendChild(row);
+                    <td>₱${rec.amountInNumber}</td>
+                    <td>${rec.orderNumber !== "N/A" ? rec.orderNumber : rec.description}</td>
+                    <td><button onclick='viewRecord(${JSON.stringify(rec)})'>View</button></td>
+                </tr>`;
+                listTable.innerHTML += row;
             });
-        })
-        .catch(err => {
-            listTable.innerHTML = "<tr><td colspan='5' style='color:red;'>⚠️ Connection Error</td></tr>";
-            console.error(err);
-        });
+        }).catch(() => listTable.innerHTML = "<tr><td colspan='5'>Error loading list.</td></tr>");
 }
 
-  function viewRecord(data) {
-    isEditing = true; // Stops the app from generating a NEW number
-    
-    // Fill the form with the cloud data
+function viewRecord(data) {
+    isEditing = true;
     document.getElementById('receiptCode').value = data.receiptCode;
     document.getElementById('date').value = new Date(data.date).toISOString().split('T')[0];
     document.getElementById('receivedFrom').value = data.receivedFrom;
@@ -633,16 +358,29 @@ function saveToSheets(receiptData) {
     document.getElementById('orderNo').value = data.orderNumber;
     document.getElementById('merchItem').value = data.merch;
     document.getElementById('balance').value = data.balance;
-
-    // Trigger visual updates
-    if (typeof syncReceipt === "function") syncReceipt();
+    syncReceipt();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-// Start app
-init();
+
+function resetForm() {
+    ["receivedFrom", "amount", "receivedBy", "merchItem", "balance", "desc"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById('modeDown').checked = false;
+    document.getElementById('modeFull').checked = false;
+    syncReceipt();
+}
+
+function downloadImage() {
+    html2canvas(document.getElementById('receipt-container'), { scale: 3 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = document.getElementById('receiptCode').value + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+}
 </script>
 </body>
 </html>
+
 
 
 
