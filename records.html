@@ -79,27 +79,58 @@
                 }
 
                 data.reverse().forEach(rec => {
-                    const row = `<tr>
-                        <td><strong>${rec.receiptCode}</strong></td>
-                        <td>${new Date(rec.date).toLocaleDateString()}</td>
-                        <td>${rec.receivedFrom}</td>
-                        <td>₱${parseFloat(rec.amountInNumber).toLocaleString()}</td>
-                        <td>₱${rec.amountInWords}</td>
-                        <td>${rec.description}</td>
-                        <td>${rec.receivedBy}</td>
-                        <td>${rec.orderNumber}</td>
-                        <td>${rec.merch}</td>
-                        <td>${rec.modeOfPayment}</td>
-                        <td style="color:${rec.balance > 0 ? 'red' : 'green'}">₱${rec.balance}</td>
-                    </tr>`;
-                    body.innerHTML += row;
+                    const balance = parseFloat(rec.balance || 0);
+    const row = `<tr>
+        <td><strong>${rec.receiptCode}</strong></td>
+        <td>${rec.date}</td>
+        <td>${rec.receivedFrom}</td>
+        <td>₱${parseFloat(rec.amountInNumber).toLocaleString()}</td>
+        <td>${rec.amountInWords}</td>
+        <td>${rec.description}</td>
+        <td>${rec.receivedBy}</td>
+        <td>${rec.orderNumber}</td>
+        <td>${rec.merch}</td>
+        <td>${rec.modeOfPayment}</td>
+        <td class="${balance > 0 ? 'bal-red' : 'bal-green'}">₱${balance.toFixed(2)}</td>
+        <td>
+            <div class="action-btns">
+                <button class="btn-edit" onclick='loadToEncoder(${JSON.stringify(rec)})'>Load/Edit</button>
+                <button class="btn-del" onclick="deleteRecord('${rec.receiptCode}')">Delete</button>
+            </div>
+        </td>
+    </tr>`;
+    body.innerHTML += row;
                 });
             })
             .catch(err => {
                 body.innerHTML = "<tr><td colspan='10' style='color:red; text-align:center;'>Error connecting to Google Sheets.</td></tr>";
             });
     }
+// 1. Load data back to Encoder for Printing/Editing
+function loadToEncoder(record) {
+    // Save this specific record as the "Active Edit"
+    localStorage.setItem('edit_record', JSON.stringify(record));
+    // Redirect back to the encoder
+    window.location.href = 'index.html';
+}
 
+// 2. Delete Record from Google Sheets
+async function deleteRecord(code) {
+    if (!confirm(`Are you sure you want to delete ${code}? This cannot be undone.`)) return;
+
+    // We send a POST request with an action: 'DELETE'
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ action: 'DELETE', receiptCode: code })
+        });
+        alert("Delete request sent! Please refresh in a moment.");
+        fetchRecords(); // Refresh the list
+    } catch (e) {
+        alert("Error deleting: " + e.message);
+    }
+}
     // Auto-load on open
     window.onload = fetchRecords;
 </script>
