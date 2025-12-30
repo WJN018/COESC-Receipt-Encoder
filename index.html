@@ -35,6 +35,18 @@ button{padding:10px 20px;border:none;border-radius:4px;font-weight:700;cursor:po
 .btn-clear{background:#6c757d;color:#fff;flex:1;}
 .btn-print{background:#28a745;color:#fff;}
 .btn-png{background:#e67e22;color:#fff;}
+  .btn-vault {
+  background: #5d6d7e; /* Professional slate gray */
+  color: #fff;
+  flex: 1;
+}
+
+/* Hover effect for all buttons */
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  transition: 0.2s;
+}
 
 /* TABLE */
 .table-responsive{overflow-x:auto;margin-top:30px;}
@@ -126,6 +138,7 @@ th{background:var(--primary);color:#fff;}
 <div class="btn-group">
   <button class="btn-clear" onclick="resetForm()">Clear</button>
   <button class="btn-save" onclick="saveReceipt()">Save Record</button>
+  <button class="btn-vault" onclick="window.open('records.html', '_blank')">📂 View Records</button>
   <button class="btn-print" onclick="finalPrint()">Print Receipt</button>
   <button class="btn-png" onclick="downloadImage()">Save as PNG</button>
 </div>
@@ -417,6 +430,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
