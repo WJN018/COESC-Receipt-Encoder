@@ -217,31 +217,30 @@ function init() {
 }
 
 function genIds() {
-    if (isEditing) return; 
+    if (typeof isEditing !== 'undefined' && isEditing) return;
 
     const receiptField = document.getElementById('receiptCode');
     const orderField = document.getElementById('orderNo');
     const categoryField = document.getElementById('category');
     const descField = document.getElementById('desc');
 
-    // GENERATE RECEIPT CODE IMMEDIATELY
+    // THIS LINE sets the Receipt Code instantly
     if (receiptField) {
         receiptField.value = "COESC-2026-" + String(rNum).padStart(4, '0');
     }
 
-    // CHECK CATEGORY (Matches your Merchandise default)
+    // Handle Merchandise Defaults
     if (categoryField && categoryField.value === "Merchandise") {
-        if (orderField) {
+        if (orderField && !orderField.value) {
             orderField.value = "ORD-" + String(oNum).padStart(3, '0');
         }
-        if (descField && descField.value === "") {
+        if (descField) {
             descField.value = "Merchandise";
         }
     } else {
         if (orderField) orderField.value = "";
     }
     
-    // Update the visual receipt preview
     if (typeof syncReceipt === "function") syncReceipt();
 }
 function toggleFields() {
@@ -564,6 +563,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
