@@ -168,7 +168,8 @@ let isEditing = false;
 window.onload = function() {
     init();
     refreshList(); // This pulls your Google Sheet data to the sidebar
-};
+    genIds(); 
+};};
   /* ================= 1. POSITIONS LOGIC ================= */
 const pos = {
   f_code: [23.25, 31.23], 
@@ -214,38 +215,29 @@ function init() {
 function genIds() {
     if (typeof isEditing !== 'undefined' && isEditing) return; 
 
-    const receiptField = document.getElementById('receiptCode');
-    const orderField = document.getElementById('orderNo');
     const categoryField = document.getElementById('category');
-    const descField = document.getElementById('desc'); // The ID from your screenshot
+    const descField = document.getElementById('desc');
+    const orderField = document.getElementById('orderNo');
 
-    // 1. Auto-generate Receipt Code
-    if (receiptField && !receiptField.value) {
-        receiptField.value = "COESC-2026-" + String(rNum).padStart(4, '0');
-    }
-
-    // 2. Handle Merchandise Logic
     if (categoryField.value === "Merchandise") {
-        // Auto-fill Order Number
-        if (orderField && !orderField.value) {
+        // Automatically fill Order No
+        if (!orderField.value) {
             orderField.value = "ORD-" + String(oNum).padStart(3, '0');
         }
-        // Auto-fill Description (Payment For)
-        if (descField && descField.value === "") {
-            descField.value = "Merchandise";
-        }
+        // Automatically fill Description
+        descField.value = "Merchandise";
+        // Optional: Disable the description field so it's "locked"
+        // descField.readOnly = true; 
     } else {
-        // Clear them if switched back to "Others"
-        if (orderField) orderField.value = "";
-        if (descField && descField.value === "Merchandise") {
-            descField.value = ""; 
-        }
+        // If switched to "Others", clear and unlock
+        if (orderField.value.startsWith("ORD-")) orderField.value = "";
+        if (descField.value === "Merchandise") descField.value = "";
+        // descField.readOnly = false;
     }
     
-    // Push updates to the receipt preview
-    if (typeof syncReceipt === "function") syncReceipt();
+    // Always call sync to update the actual receipt image
+    syncReceipt();
 }
-
 function toggleFields() {
   var isMerch = category.value === 'Merchandise';
 
@@ -566,6 +558,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
