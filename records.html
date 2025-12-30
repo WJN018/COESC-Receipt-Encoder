@@ -12,27 +12,8 @@
         th { background: var(--primary); color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
         td { padding: 10px; border-bottom: 1px solid #ddd; }
         tr:hover { background: #f1f1f1; }
-        .refresh-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    </style>
-</head>
-<body>
-
-<div class="vault-container">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h1>📂 Official Receipt Vault (2026)</h1>
-        <button class="btn-back" onclick="window.location.href='index.html'">⬅ Back to Encoder</button>
-    </div>
-    
-    <div class="controls">
-        <button class="refresh-btn" onclick="fetchRecords()">🔄 Refresh List</button>
-    </div>
-    
-    ```
-
-### 2. Update the Records Page CSS
-Add these styles to the `<style>` section of your `records.html` to make the button look consistent with your design:
-
-```css
+        .refresh-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; 
+                     css
 .btn-back {
     background: #6c757d; /* Gray color to match your 'Clear' button */
     color: white;
@@ -54,6 +35,22 @@ Add these styles to the `<style>` section of your `records.html` to make the but
     display: flex;
     gap: 10px;
 }
+    </style>
+</head>
+<body>
+
+<div class="vault-container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>📂 Official Receipt Vault (2026)</h1>
+        <button class="btn-back" onclick="window.location.href='index.html'">⬅ Back to Encoder</button>
+    </div>
+    
+    <div class="controls">
+        <button class="refresh-btn" onclick="fetchRecords()">🔄 Refresh List</button>
+    </div>
+    
+
+
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_E5rdVdJIyjxgvzo_cKd2BN8o_sCpg-R4xOxFpT0Fzfk-MPyLX-FkR1wm3KDv5d_o/exec';
 
