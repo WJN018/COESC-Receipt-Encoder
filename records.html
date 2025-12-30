@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>COESC | Official Records Vault</title>
+    <style>
+        :root { --primary: #003366; --bg: #f4f4f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; }
+        .vault-container { max-width: 1200px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+        th { background: var(--primary); color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f1f1f1; }
+        .refresh-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="vault-container">
+    <h1>📂 Official Receipt Vault (2026)</h1>
+    <button class="refresh-btn" onclick="fetchRecords()">🔄 Refresh List</button>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Code (A)</th>
+                <th>Date (B)</th>
+                <th>Received From (C)</th>
+                <th>Amount (D)</th>
+                <th>Description (F)</th>
+                <th>Received By (G)</th>
+                <th>Order No (H)</th>
+                <th>Merch (I)</th>
+                <th>Mode (J)</th>
+                <th>Balance (K)</th>
+            </tr>
+        </thead>
+        <tbody id="vault-body">
+            <tr><td colspan="10" style="text-align:center;">Click Refresh to load data...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const SCRIPT_URL = 'YOUR_SAME_APPS_SCRIPT_URL_HERE';
+
+    function fetchRecords() {
+        const body = document.getElementById('vault-body');
+        body.innerHTML = "<tr><td colspan='10' style='text-align:center;'>Fetching from Cloud...</td></tr>";
+
+        fetch(SCRIPT_URL)
+            .then(res => res.json())
+            .then(data => {
+                body.innerHTML = "";
+                if (data.length === 0) {
+                    body.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No records found.</td></tr>";
+                    return;
+                }
+
+                data.reverse().forEach(rec => {
+                    const row = `<tr>
+                        <td><strong>${rec.receiptCode}</strong></td>
+                        <td>${new Date(rec.date).toLocaleDateString()}</td>
+                        <td>${rec.receivedFrom}</td>
+                        <td>₱${parseFloat(rec.amountInNumber).toLocaleString()}</td>
+                        <td>${rec.description}</td>
+                        <td>${rec.receivedBy}</td>
+                        <td>${rec.orderNumber}</td>
+                        <td>${rec.merch}</td>
+                        <td>${rec.modeOfPayment}</td>
+                        <td style="color:${rec.balance > 0 ? 'red' : 'green'}">₱${rec.balance}</td>
+                    </tr>`;
+                    body.innerHTML += row;
+                });
+            })
+            .catch(err => {
+                body.innerHTML = "<tr><td colspan='10' style='color:red; text-align:center;'>Error connecting to Google Sheets.</td></tr>";
+            });
+    }
+
+    // Auto-load on open
+    window.onload = fetchRecords;
+</script>
+</body>
+</html>
