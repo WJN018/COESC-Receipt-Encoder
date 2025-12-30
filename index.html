@@ -131,11 +131,18 @@ th{background:var(--primary);color:#fff;}
 </div>
 
 <div class="table-responsive">
-<h2>📂 Receipt Records</h2>
-<table>
-<thead><tr><th>Code</th><th>From</th><th>Amount</th><th>Desc</th><th>Actions</th></tr></thead>
-<tbody id="records"></tbody>
-</table>
+    <h2>📂 Receipt Records</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>From</th>
+                <th>Amount</th>
+                <th>Desc</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="records"></tbody> </table>
 </div>
 
 <div id="print-area">
@@ -558,11 +565,85 @@ function saveToSheets(receiptData) {
     isEditing = false;
     location.reload(); // Refresh to update the list
 }
+
+  function refreshList() {
+    const listTable = document.getElementById('records');
+    if (!listTable) return;
+
+    listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>🔄 Loading Records...</td></tr>";
+
+    fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+            listTable.innerHTML = ""; 
+            
+            if (!data || data.length === 0) {
+                listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No records found in Cloud.</td></tr>";
+                return;
+            }
+
+            // Shows newest receipts at the top
+            data.reverse().forEach(rec => {
+                const row = document.createElement('tr');
+                
+                // Logic to show Merch details or Description in the "Desc" column
+                let detailText = (rec.orderNumber && rec.orderNumber !== "N/A") 
+                    ? `<strong>${rec.orderNumber}</strong>: ${rec.merch}` 
+                    : rec.description;
+
+                row.innerHTML = `
+                    <td>
+                        <strong>${rec.receiptCode}</strong><br>
+                        <small>${new Date(rec.date).toLocaleDateString()}</small>
+                    </td>
+                    <td>${rec.receivedFrom}</td>
+                    <td>
+                        ₱${parseFloat(rec.amountInNumber).toLocaleString()}<br>
+                        <small style="color: ${rec.balance > 0 ? 'red' : 'green'};">
+                            Bal: ₱${rec.balance}
+                        </small>
+                    </td>
+                    <td>
+                        ${detailText}<br>
+                        <small><i>By: ${rec.receivedBy}</i></small>
+                    </td>
+                    <td>
+                        <button class="view-btn" onclick='viewRecord(${JSON.stringify(rec)})'>View</button>
+                    </td>
+                `;
+                listTable.appendChild(row);
+            });
+        })
+        .catch(err => {
+            listTable.innerHTML = "<tr><td colspan='5' style='color:red;'>⚠️ Connection Error</td></tr>";
+            console.error(err);
+        });
+}
+
+  function viewRecord(data) {
+    isEditing = true; // Stops the app from generating a NEW number
+    
+    // Fill the form with the cloud data
+    document.getElementById('receiptCode').value = data.receiptCode;
+    document.getElementById('date').value = new Date(data.date).toISOString().split('T')[0];
+    document.getElementById('receivedFrom').value = data.receivedFrom;
+    document.getElementById('amount').value = data.amountInNumber;
+    document.getElementById('receivedBy').value = data.receivedBy;
+    document.getElementById('desc').value = data.description;
+    document.getElementById('orderNo').value = data.orderNumber;
+    document.getElementById('merchItem').value = data.merch;
+    document.getElementById('balance').value = data.balance;
+
+    // Trigger visual updates
+    if (typeof syncReceipt === "function") syncReceipt();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 // Start app
 init();
 </script>
 </body>
 </html>
+
 
 
 
