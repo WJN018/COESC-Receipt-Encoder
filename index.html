@@ -301,7 +301,11 @@ async function saveReceipt() {
         modeOfPayment: document.getElementById('modeFull').checked ? "Full Payment" : "Downpayment",
         balance: document.getElementById('balance').value || "0"
     };
-
+let modes = [];
+document.querySelectorAll('input[name="paymentMode"]:checked').forEach(cb => {
+    modes.push(cb.value);
+});
+let modeOfPayment = modes.join(", ");
     if (!data.receivedFrom) return alert("Please enter a name.");
 
     try {
@@ -415,6 +419,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
