@@ -328,23 +328,60 @@ async function saveReceipt() {
 
 function refreshList() {
     const listTable = document.getElementById('records');
-    listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>🔄 Syncing...</td></tr>";
+    if (!listTable) return;
+
+    listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>🔄 Syncing with Google Sheets...</td></tr>";
 
     fetch(SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
-            listTable.innerHTML = "";
+            listTable.innerHTML = ""; 
+            
+            if (!data || data.length === 0) {
+                listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No records found in Cloud.</td></tr>";
+                return;
+            }
+
+            // Shows newest receipts at the top
             data.reverse().forEach(rec => {
-                const row = `<tr>
-                    <td><strong>${rec.receiptCode}</strong></td>
+                const row = document.createElement('tr');
+                
+                // Smart Description: Shows Merch/Order info if available, otherwise regular description
+                let detailText = (rec.orderNumber && rec.orderNumber !== "N/A") 
+                    ? `<strong>${rec.orderNumber}</strong>: ${rec.merch}` 
+                    : rec.description;
+
+                // Format amount to 2 decimal places
+                const formattedAmt = parseFloat(rec.amountInNumber).toLocaleString(undefined, {minimumFractionDigits: 2});
+
+                row.innerHTML = `
+                    <td>
+                        <strong>${rec.receiptCode}</strong><br>
+                        <small>${new Date(rec.date).toLocaleDateString()}</small>
+                    </td>
                     <td>${rec.receivedFrom}</td>
-                    <td>₱${rec.amountInNumber}</td>
-                    <td>${rec.orderNumber !== "N/A" ? rec.orderNumber : rec.description}</td>
-                    <td><button onclick='viewRecord(${JSON.stringify(rec)})'>View</button></td>
-                </tr>`;
-                listTable.innerHTML += row;
+                    <td>
+                        ₱${formattedAmt}<br>
+                        <small style="color: ${parseFloat(rec.balance) > 0 ? 'red' : 'green'};">
+                            Bal: ₱${parseFloat(rec.balance).toFixed(2)}
+                        </small>
+                    </td>
+                    <td>
+                        ${detailText}<br>
+                        <small><i>By: ${rec.receivedBy}</i></small>
+                    </td>
+                    <td>
+                        <button class="view-btn" style="background:#003366; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" 
+                        onclick='viewRecord(${JSON.stringify(rec)})'>View</button>
+                    </td>
+                `;
+                listTable.appendChild(row);
             });
-        }).catch(() => listTable.innerHTML = "<tr><td colspan='5'>Error loading list.</td></tr>");
+        })
+        .catch(err => {
+            listTable.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>⚠️ Failed to load list. Check SCRIPT_URL.</td></tr>";
+            console.error("List Fetch Error:", err);
+        });
 }
 
 function viewRecord(data) {
@@ -380,6 +417,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
