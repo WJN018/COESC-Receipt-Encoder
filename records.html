@@ -1,53 +1,42 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>COESC | Official Records Vault</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COESC | Receipt Vault</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #003366; --bg: #f4f4f9; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; }
-        .vault-container { max-width: 1200px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-        th { background: var(--primary); color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
-        td { padding: 10px; border-bottom: 1px solid #ddd; }
-        tr:hover { background: #f1f1f1; }
-        .refresh-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; 
-                     css
-.btn-back {
-    background: #6c757d; /* Gray color to match your 'Clear' button */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.3s;
-}
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .vault-container { max-width: 1300px; margin: auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
+        h1 { color: var(--primary); margin: 0; font-size: 24px; }
 
-.btn-back:hover {
-    background: #5a6268;
-    transform: translateX(-3px);
-}
+        .btn-back { background: #fff; color: #333; border: 1px solid #ccc; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .btn-refresh { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: 600; margin-bottom: 20px; }
 
-.controls {
-    margin: 20px 0;
-    display: flex;
-    gap: 10px;
-}
+        /* Table Styling */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+        th { background: var(--primary); color: white; padding: 12px 8px; text-align: left; text-transform: uppercase; }
+        td { padding: 10px 8px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f9f9f9; }
+        
+        .bal-red { color: red; font-weight: bold; }
+        .bal-green { color: green; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="vault-container">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="header-row">
         <h1>📂 Official Receipt Vault (2026)</h1>
-        <button class="btn-back" onclick="window.location.href='index.html'">⬅ Back to Encoder</button>
+        <button class="btn-back" onclick="window.location.href='index.html'">← Back to Encoder</button>
     </div>
-    
-    <div class="controls">
-        <button class="refresh-btn" onclick="fetchRecords()">🔄 Refresh List</button>
-    </div>
+
+    <button class="btn-refresh" onclick="fetchRecords()">🔄 Refresh List</button>
+
     <div class="table-wrapper">
         <table>
             <thead>
