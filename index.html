@@ -295,19 +295,28 @@ function saveReceipt(){
  genIds(); render(); resetForm(false);
 }
 
-function render(){
-  records.innerHTML = '';
-  receipts.forEach(function(r, i){
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      `<td>${r.code}</td><td>${r.from}</td><td>₱${Number(r.amt).toFixed(2)}</td><td>${r.desc}</td>` +
-      `<td>
-        <button onclick="editReceipt(${i})" style="background:#f39c12;color:white;margin-right:5px;">Edit</button>
-        <button onclick="deleteReceipt(${i})" style="background:#e74c3c;color:white;margin-right:5px;">Del</button>
-        <button onclick="printRow(${i})" style="background:#3498db;color:white;">Print</button>
-      </td>`;
-    records.appendChild(tr);
-  });
+function render() {
+    const listElement = document.getElementById('receipt-list'); // Change to your actual ID
+    listElement.innerHTML = "<li>Loading records...</li>";
+
+    fetch(SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+            listElement.innerHTML = ""; // Clear loading message
+            data.reverse().forEach(record => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <b>${record.receiptCode}</b><br>
+                    <small>${record.receivedFrom} - ₱${record.amountInNumber}</small>
+                `;
+                li.onclick = () => loadReceiptIntoView(record); // Function to show it on the receipt
+                listElement.appendChild(li);
+            });
+        })
+        .catch(err => {
+            listElement.innerHTML = "<li>Error loading data</li>";
+            console.error(err);
+        });
 }
 
 function editReceipt(i) {
@@ -442,4 +451,5 @@ init();
 </script>
 </body>
 </html>
+
 
