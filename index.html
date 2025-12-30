@@ -212,25 +212,29 @@ function init() {
 }
 
 function genIds() {
+    // Only generate if we aren't viewing an old record
     if (typeof isEditing !== 'undefined' && isEditing) return; 
 
     const receiptField = document.getElementById('receiptCode');
-    const orderField = document.getElementById('orderNo'); // Matched to your HTML
+    const orderField = document.getElementById('orderNo'); // Matches your HTML id="orderNo"
     const category = document.getElementById('category').value;
-
-    // 1. Generate Receipt Code if the user has started typing a name
     const nameInput = document.getElementById('receivedFrom').value;
+
+    // Generate Receipt Code as soon as someone starts typing a name
     if (nameInput.trim() !== "" && !receiptField.value) {
         receiptField.value = "COESC-2026-" + String(rNum).padStart(4, '0');
+        syncReceipt(); // Updates the preview instantly
     }
 
-    // 2. Generate Order No only if "Merchandise" is selected
+    // Handle Order No based on your Dropdown
     if (category === "Merchandise") {
         if (!orderField.value) {
             orderField.value = "ORD-" + String(oNum).padStart(3, '0');
+            syncReceipt();
         }
     } else {
-        orderField.value = ""; // Clear it if "Others" is selected
+        orderField.value = ""; 
+        syncReceipt();
     }
 }
 
@@ -554,6 +558,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
