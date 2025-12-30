@@ -392,9 +392,54 @@ function downloadImage() {
     link.click();
   });
 }
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFXhAYXuAwGSZ-BerdI45uKrLS_K1xAEFtRxlKNwyi-tU1aboYWSo15iJGVuA2yUtq/exec';
 
+function saveToSheets(receiptData) {
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Important for Google Apps Script
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(receiptData)
+    })
+    .then(() => {
+        alert("Saved to Google Sheets!");
+        // You can still keep your localStorage logic here if you want a local backup
+    })
+    .catch(error => console.error('Error!', error.message));
+}
+
+  function prepareDataForSheets() {
+    // Ipunin ang Merch Table items
+    const rows = document.querySelectorAll('#merch-body tr');
+    let merchSummary = "";
+    
+    rows.forEach(row => {
+        const qty = row.cells[0].innerText;
+        const desc = row.cells[1].innerText;
+        const amt = row.cells[2].innerText;
+        if(desc !== "") {
+            merchSummary += `${qty}x ${desc} (${amt}); `;
+        }
+    });
+
+    const receiptData = {
+        receiptCode: document.getElementById('receiptCode').value,
+        date: document.getElementById('date').value,
+        receivedFrom: document.getElementById('receivedFrom').value,
+        amountInWords: document.getElementById('amountInWords').value,
+        amountInNumber: document.getElementById('amountNum').value,
+        receiptType: document.querySelector('input[name="receiptType"]:checked')?.value || "N/A",
+        by: document.getElementById('by').value,
+        merchDetails: merchSummary // Ito yung pinagsama-samang items
+    };
+
+    saveToSheets(receiptData);
+}
 // Start app
 init();
 </script>
 </body>
 </html>
+
