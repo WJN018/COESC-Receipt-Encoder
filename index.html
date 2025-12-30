@@ -199,8 +199,6 @@ function applyPositions() {
 /* ================= 2. DATA MANAGEMENT ================= */
 let receipts = JSON.parse(localStorage.getItem('coesc_receipts')) || [];
 let lastSavedIndex = -1; // FIXED SYNTAX ERROR HERE
-let rNum = +localStorage.getItem('coesc_next_receipt') || 1;
-let oNum = +localStorage.getItem('coesc_next_order') || 1;
 
 function init() {
   // Load the HD image into the img tag
@@ -556,6 +554,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
