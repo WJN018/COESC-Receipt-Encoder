@@ -48,7 +48,29 @@
     <div class="controls">
         <button class="refresh-btn" onclick="fetchRecords()">🔄 Refresh List</button>
     </div>
-    
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Code (A)</th>
+                    <th>Date (B)</th>
+                    <th>From (C)</th>
+                    <th>Amount (D)</th>
+                    <th>Words (E)</th>
+                    <th>Description (F)</th>
+                    <th>By (G)</th>
+                    <th>Order No (H)</th>
+                    <th>Item (I)</th>
+                    <th>Mode (J)</th>
+                    <th>Balance (K)</th>
+                </tr>
+            </thead>
+            <tbody id="vault-body">
+                <tr><td colspan="11" style="text-align:center; padding: 30px;">Loading data from Google Sheets...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 
 <script>
