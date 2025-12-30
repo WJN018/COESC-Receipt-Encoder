@@ -182,6 +182,15 @@ const pos = {
 
 window.onload = function() {
     init();
+
+    // Check if we arrived here from the "Load" button in records.html
+    const editData = localStorage.getItem('edit_record');
+    if (editData) {
+        const data = JSON.parse(editData);
+        viewRecord(data); // Fill the form
+        localStorage.removeItem('edit_record'); // Clear it so it doesn't stay forever
+        alert("Record Loaded! You can now Print, Save as PNG, or Edit and Save.");
+    }
 };
 
 function init() {
@@ -433,6 +442,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
