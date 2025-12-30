@@ -94,9 +94,9 @@ th{background:var(--primary);color:#fff;}
   <div class="full">
     <label>Transaction Category</label>
     <select id="category" onchange="toggleFields(); genIds();">
-      <option value="Merchandise">Merchandise</option>
-      <option value="Others">Others</option>
-    </select>
+    <option value="Merchandise" selected>Merchandise</option>
+    <option value="Others">Others</option>
+</select>
   </div>
   <div><label>Receipt Code</label><input id="receiptCode" class="read-only" readonly></div>
   <div><label>Date</label><input type="date" id="date" oninput="syncReceipt()"></div>
@@ -558,6 +558,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
