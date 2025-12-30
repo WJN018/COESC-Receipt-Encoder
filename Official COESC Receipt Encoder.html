@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COESC Receipt Encoder</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="bg-data.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ================= CSS STYLES ================= */
+:root{
+  --primary:#003366;
+  --secondary:#f4f4f9;
+  --radius:8px;
+  --a6-width:794px;
+  --a6-height:559px;
+}
+body{margin:0;padding:20px;font-family:'Segoe UI',Tahoma,Verdana,sans-serif;background:var(--secondary);color:#333;}
+.container{max-width:1200px;margin:auto;background:#fff;padding:25px;border-radius:var(--radius);box-shadow:0 4px 15px rgba(0,0,0,.1);} 
+header{text-align:center;margin-bottom:30px;border-bottom:2px solid var(--primary);padding-bottom:15px;}
+h1{margin:0;color:var(--primary);text-transform:uppercase;}
+label{font-size:14px;font-weight:600;display:block;margin-bottom:5px;}
+input,select{width:100%;padding:10px;border:1px solid #ccc;border-radius:4px;font-size:14px;}
+.read-only{background:#e9ecef;cursor:not-allowed;}
+.form-section{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.full{grid-column:1/-1;}
+.checkbox-group{display:flex;gap:15px;align-items:center;}
+
+/* BUTTONS */
+.btn-group{display:flex;gap:10px;margin-top:20px;}
+button{padding:10px 20px;border:none;border-radius:4px;font-weight:700;cursor:pointer;}
+.btn-save{background:var(--primary);color:#fff;flex:2;}
+.btn-clear{background:#6c757d;color:#fff;flex:1;}
+.btn-print{background:#28a745;color:#fff;}
+.btn-png{background:#e67e22;color:#fff;}
+
+/* TABLE */
+.table-responsive{overflow-x:auto;margin-top:30px;}
+table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;}
+th,td{padding:12px 10px;border-bottom:1px solid #ddd;text-align:left;}
+th{background:var(--primary);color:#fff;}
+
+/* RECEIPT PREVIEW */
+#print-area{margin-top:40px;display:flex;justify-content:center;}
+#receipt-container {
+  width: var(--a6-width);
+  height: var(--a6-height);
+  /* Ensure this file is in the same folder! */
+  background: #fff url('data:image/png;base64,....') no-repeat center/contain;  position: relative;
+  box-shadow: 0 0 20px rgba(0,0,0,.15);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* POSITIONING CLASSES */
+.field {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 16px; /* Adjust size if needed */
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* PRINT SETTINGS */
+@media print {
+  @page { size: landscape; margin: 0; }
+  body { background:#fff; padding:0; margin:0; }
+  .container > *:not(#print-area) { display: none !important; }
+  #print-area { margin:0; padding:0; display:block; }
+  #receipt-container { 
+    box-shadow: none; 
+    position: absolute; 
+    top: 0; left: 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<header>
+  <h1>COESC Receipt Encoder</h1>
+  <p>College of Education Student Council</p>
+</header>
+
+<h2>📝 Encode New Receipt</h2>
+<div class="form-section">
+  <div class="full">
+    <label>Transaction Category</label>
+    <select id="category" onchange="toggleFields()">
+      <option value="Merchandise">Merchandise</option>
+      <option value="Others">Others</option>
+    </select>
+  </div>
+  <div><label>Receipt Code</label><input id="receiptCode" class="read-only" readonly></div>
+  <div><label>Date</label><input type="date" id="date" oninput="syncReceipt()"></div>
+  <div class="full"><label>Received From</label><input id="receivedFrom" oninput="syncReceipt()"></div>
+  <div><label>Amount (PHP)</label><input type="number" id="amount" step="0.01" oninput="syncReceipt()"></div>
+  <div><label>Received By</label><input id="receivedBy" oninput="syncReceipt()"></div>
+  <div class="full"><label>Description</label><input id="desc" oninput="syncReceipt()"></div>
+
+  <div id="merchFields" class="form-section full">
+    <div><label>Order No</label><input id="orderNo" class="read-only" readonly></div>
+    <div><label>Merch Item</label><input id="merchItem" oninput="syncReceipt()"></div>
+    <div><label>Quantity</label><input type="number" id="qty" value="1" oninput="syncReceipt()"></div>
+    <div><label>Balance</label><input type="number" id="balance" step="0.01" oninput="syncReceipt()"></div>
+    <div class="full">
+      <label>Mode of Payment</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="modeDown" onchange="syncReceipt()"> Downpayment</label>
+        <label><input type="checkbox" id="modeFull" onchange="syncReceipt()"> Full Payment</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-group">
+  <button class="btn-clear" onclick="resetForm()">Clear</button>
+  <button class="btn-save" onclick="saveReceipt()">Save Record</button>
+  <button class="btn-print" onclick="finalPrint()">Print Receipt</button>
+  <button class="btn-png" onclick="downloadImage()">Save as PNG</button>
+</div>
+
+<div class="table-responsive">
+<h2>📂 Receipt Records</h2>
+<table>
+<thead><tr><th>Code</th><th>From</th><th>Amount</th><th>Desc</th><th>Actions</th></tr></thead>
+<tbody id="records"></tbody>
+</table>
+</div>
+
+<div id="print-area">
+  <div id="receipt-container">
+    <img id="hd-bg" src="" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; object-fit: fill;">
+    
+    <div class="field" id="f_code" style="z-index:1;"></div>
+    <div class="field" id="f_date" style="z-index:1;"></div>
+    <div class="field" id="f_from" style="z-index:1;"></div>
+    <div class="field" id="f_amtWord" style="z-index:1;"></div>
+    <div class="field" id="f_amtNum" style="z-index:1;"></div>
+    <div class="field" id="f_desc" style="z-index:1;"></div>
+    <div class="field" id="f_ord" style="z-index:1;"></div>
+    <div class="field" id="f_merch" style="z-index:1;"></div>
+    <div class="field" id="f_qty" style="z-index:1;"></div>
+    <div class="field" id="f_bal" style="z-index:1;"></div>
+    <div class="field" id="f_down" style="z-index:1;"></div>
+    <div class="field" id="f_full" style="z-index:1;"></div>
+    <div class="field" id="f_by" style="z-index:1;"></div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ================= 1. POSITIONS LOGIC ================= */
+const pos = {
+  f_code: [23.25, 31.23], 
+  f_date: [22.7, 83.9], 
+  f_from: [34.7, 61.7], 
+  f_amtWord: [46.3, 40.8], 
+  f_amtNum: [45.6, 89.4], 
+  f_desc: [57.2, 62.3], 
+  f_ord: [75, 22], 
+  f_merch: [83, 22], 
+  f_qty: [90.7, 22], 
+  f_bal: [90.3, 49.8], 
+  f_down: [75, 41], 
+  f_full: [83, 41], 
+  f_by: [87.4, 77.7]
+};
+
+function applyPositions() {
+  Object.keys(pos).forEach(id => {
+    const e = document.getElementById(id);
+    if (e) {
+      e.style.top = pos[id][0] + '%';
+      e.style.left = pos[id][1] + '%';
+    }
+  });
+}
+
+/* ================= 2. DATA MANAGEMENT ================= */
+let receipts = JSON.parse(localStorage.getItem('coesc_receipts')) || [];
+let lastSavedIndex = -1; // FIXED SYNTAX ERROR HERE
+let rNum = +localStorage.getItem('coesc_next_receipt') || 1;
+let oNum = +localStorage.getItem('coesc_next_order') || 1;
+
+function init() {
+  // Load the HD image into the img tag
+  document.getElementById('hd-bg').src = receiptBase64;
+  
+  // Clear the CSS background if it's still there
+  document.getElementById('receipt-container').style.background = "none";
+
+  date.value = new Date().toISOString().split('T')[0];
+  genIds(); render(); applyPositions(); toggleFields();
+}
+
+function genIds(){
+ receiptCode.value = `COESC-2026-${String(rNum).padStart(4,'0')}`;
+ orderNo.value = `ORD-${String(oNum).padStart(3,'0')}`;
+ syncReceipt();
+}
+
+function toggleFields() {
+  const isMerch = category.value === 'Merchandise';
+  merchFields.style.display = isMerch ? 'grid' : 'none';
+  
+  if (isMerch) {
+    desc.value = 'MERCHANDISE';
+    desc.readOnly = true;
+    desc.classList.add('read-only');
+  } else {
+    desc.value = '';
+    desc.readOnly = false;
+    desc.classList.remove('read-only');
+  }
+  syncReceipt();
+}
+
+/* ================= 3. RECEIPT SYNC ================= */
+function toWords(num) {
+  if (!num || num === 0) return "ZERO";
+  const ones = ["","ONE","TWO","THREE","FOUR","FIVE","SIX","SEVEN","EIGHT","NINE"];
+  const teens = ["TEN","ELEVEN","TWELVE","THIRTEEN","FOURTEEN","FIFTEEN","SIXTEEN","SEVENTEEN","EIGHTEEN","NINETEEN"];
+  const tens = ["","","TWENTY","THIRTY","FORTY","FIFTY","SIXTY","SEVENTY","EIGHTY","NINETY"];
+  
+  function convert(n) {
+    if (n < 10) return ones[n];
+    if (n < 20) return teens[n - 10];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+    if (n < 1000) return ones[Math.floor(n / 100)] + " HUNDRED" + (n % 100 ? " AND " + convert(n % 100) : "");
+    return "";
+  }
+  
+  let res = "";
+  if (num >= 1000) { res += convert(Math.floor(num / 1000)) + " THOUSAND "; num %= 1000; }
+  if (num > 0) res += convert(num);
+  return res.trim().toUpperCase();
+}
+
+function syncReceipt() {
+  const d = new Date(date.value);
+  f_date.textContent = (d.getMonth() + 1) + "/" + d.getDate();
+  f_from.textContent = receivedFrom.value.toUpperCase();
+  f_by.textContent = receivedBy.value.toUpperCase();
+  f_desc.textContent = desc.value.toUpperCase();
+  f_code.textContent = receiptCode.value.split('-').pop(); // Show only number part on receipt? Or full code
+
+  if (category.value === 'Merchandise') {
+    f_ord.textContent = orderNo.value;
+    f_merch.textContent = merchItem.value.toUpperCase();
+    f_qty.textContent = qty.value;
+    f_bal.textContent = balance.value ? "₱ " + Number(balance.value).toFixed(2) : "";
+    f_down.textContent = modeDown.checked ? "✔" : "";
+    f_full.textContent = modeFull.checked ? "✔" : "";
+  } else {
+    f_ord.textContent = "";
+    f_merch.textContent = "";
+    f_qty.textContent = "";
+    f_bal.textContent = "";
+    f_down.textContent = "";
+    f_full.textContent = "";
+  }
+
+  f_amtNum.textContent = amount.value ? Number(amount.value).toFixed(2) : "0.00";
+  f_amtWord.textContent = amount.value ? toWords(Math.floor(amount.value)) : "ZERO";
+
+  // THIS IS CRITICAL: RE-APPLY POSITIONS EVERY TIME DATA CHANGES
+  applyPositions();
+}
+
+/* ================= 4. SAVE & ACTIONS ================= */
+function saveReceipt(){
+ const data = {
+  code:receiptCode.value, date:date.value, from:receivedFrom.value,
+  amt:amount.value, desc:desc.value, by:receivedBy.value,
+  merch:merchItem.value, qty:qty.value, bal:balance.value,
+  down:modeDown.checked, full:modeFull.checked, cat:category.value
+ };
+ receipts.push(data);
+ lastSavedIndex = receipts.length - 1;
+ rNum++; 
+ if(category.value==='Merchandise') oNum++;
+ 
+ localStorage.setItem('coesc_receipts', JSON.stringify(receipts));
+ localStorage.setItem('coesc_next_receipt', rNum);
+ localStorage.setItem('coesc_next_order', oNum);
+ 
+ genIds(); render(); resetForm(false);
+}
+
+function render(){
+  records.innerHTML = '';
+  receipts.forEach(function(r, i){
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td>${r.code}</td><td>${r.from}</td><td>₱${Number(r.amt).toFixed(2)}</td><td>${r.desc}</td>` +
+      `<td>
+        <button onclick="editReceipt(${i})" style="background:#f39c12;color:white;margin-right:5px;">Edit</button>
+        <button onclick="deleteReceipt(${i})" style="background:#e74c3c;color:white;margin-right:5px;">Del</button>
+        <button onclick="printRow(${i})" style="background:#3498db;color:white;">Print</button>
+      </td>`;
+    records.appendChild(tr);
+  });
+}
+
+function editReceipt(i) {
+  const r = receipts[i];
+  category.value = r.cat || 'Merchandise';
+  receivedFrom.value = r.from;
+  amount.value = r.amt;
+  desc.value = r.desc;
+  receivedBy.value = r.by;
+  merchItem.value = r.merch || '';
+  qty.value = r.qty || 1;
+  balance.value = r.bal || '';
+  modeDown.checked = r.down;
+  modeFull.checked = r.full;
+  receiptCode.value = r.code;
+
+  receipts.splice(i, 1);
+  toggleFields(); // Ensure correct fields show
+  alert("Record loaded. Update and click Save.");
+}
+
+function deleteReceipt(i) {
+  if (confirm("Delete this record?")) {
+    receipts.splice(i, 1);
+    localStorage.setItem('coesc_receipts', JSON.stringify(receipts));
+    render();
+  }
+}
+
+function resetForm(full=true){
+ receivedFrom.value=amount.value=receivedBy.value=merchItem.value=balance.value='';
+ qty.value=1; modeDown.checked=modeFull.checked=false;
+ if(full) syncReceipt();
+}
+
+function printRow(i){
+ const r = receipts[i];
+ // Load data purely for printing without editing the form
+ f_code.textContent = r.code.split('-').pop(); // or r.code
+ f_date.textContent = new Date(r.date).getMonth()+1 + "/" + new Date(r.date).getDate();
+ f_from.textContent = r.from.toUpperCase();
+ f_amtNum.textContent = Number(r.amt).toFixed(2);
+ f_amtWord.textContent = toWords(Math.floor(r.amt));
+ f_desc.textContent = r.desc.toUpperCase();
+ f_by.textContent = r.by.toUpperCase();
+ 
+ if(r.cat === 'Merchandise') {
+   f_merch.textContent = r.merch ? r.merch.toUpperCase() : '';
+   f_qty.textContent = r.qty;
+   f_bal.textContent = r.bal ? "₱ " + Number(r.bal).toFixed(2) : "";
+   f_down.textContent = r.down ? "✔" : "";
+   f_full.textContent = r.full ? "✔" : "";
+   // Assuming order no is not saved in object but generated. 
+   // If you want to save order no, you need to add it to saveReceipt
+   f_ord.textContent = ""; 
+ } else {
+   f_ord.textContent=f_merch.textContent=f_qty.textContent=f_bal.textContent=f_down.textContent=f_full.textContent="";
+ }
+ applyPositions();
+ setTimeout(() => window.print(), 500);
+}
+
+function finalPrint(){
+  window.print();
+}
+
+function downloadImage() {
+  const receipt = document.getElementById('receipt-container');
+  
+  // Use scale: 5 for extreme "Retina" crispness
+  html2canvas(receipt, {
+    scale: 5, 
+    allowTaint: true,
+    useCORS: true,
+    logging: false,
+    backgroundColor: null,
+    imageTimeout: 0
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = (receiptCode.value || 'Receipt') + '.png';
+    link.href = canvas.toDataURL('image/png', 1.0); // 1.0 is 100% quality
+    link.click();
+  });
+}
+
+// Start app
+init();
+</script>
+</body>
+</html>
