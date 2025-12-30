@@ -305,18 +305,18 @@ async function saveReceipt() {
     let finalMode = modes.length > 0 ? modes.join(" & ") : "N/A";
 
     const data = {
-        receiptCode: document.getElementById('receiptCode').value,
-        date: document.getElementById('date').value,
-        receivedFrom: document.getElementById('receivedFrom').value,
-        amountInNumber: document.getElementById('amount').value,
-        amountInWords: toWords(Math.floor(document.getElementById('amount').value)),
-        description: document.getElementById('desc').value,
-        receivedBy: document.getElementById('receivedBy').value,
-        orderNumber: document.getElementById('orderNo').value || "N/A",
-        merch: document.getElementById('merchItem').value || "N/A",
-        modeOfPayment: finalMode, // Using the fixed logic here
-        balance: document.getElementById('balance').value || "0"
-    };
+    receiptCode: document.getElementById('receiptCode').value || "N/A",
+    date: document.getElementById('date').value || new Date().toISOString(),
+    receivedFrom: document.getElementById('receivedFrom').value || "N/A",
+    amountInNumber: document.getElementById('amount').value || 0,
+    amountInWords: toWords(Math.floor(document.getElementById('amount').value || 0)),
+    description: document.getElementById('desc').value || "N/A",
+    receivedBy: document.getElementById('receivedBy').value || "N/A",
+    orderNumber: document.getElementById('orderNo').value || "N/A",
+    merch: document.getElementById('merchItem').value || "N/A",
+    modeOfPayment: finalMode || "N/A", // Ensure finalMode is defined
+    balance: document.getElementById('balance').value || 0
+};
 
     if (!data.receivedFrom) return alert("Please enter a name.");
 
@@ -442,6 +442,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
