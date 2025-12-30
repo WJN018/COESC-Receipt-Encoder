@@ -201,26 +201,72 @@ function init() {
   genIds(); render(); applyPositions(); toggleFields();
 }
 
-function genIds(){
- receiptCode.value = `COESC-2026-${String(rNum).padStart(4,'0')}`;
- orderNo.value = `ORD-${String(oNum).padStart(3,'0')}`;
- syncReceipt();
+function genIds() {
+    // If we are editing an old receipt, DO NOT change the IDs
+    if (isEditing) return; 
+
+    // Auto-numbering for new receipts
+    if (!document.getElementById('receiptCode').value) {
+        document.getElementById('receiptCode').value = "COESC-2026-" + String(rNum).padStart(4, '0');
+    }
+    
+    // Only generate Order Number if Merch is active
+    const merchCheck = document.getElementById('merch-check').checked;
+    const orderField = document.getElementById('orderCode');
+    
+    if (merchCheck && !orderField.value) {
+        orderField.value = "ORD-" + String(oNum).padStart(3, '0');
+    } else if (!merchCheck) {
+        orderField.value = "";
+    }
 }
 
 function toggleFields() {
-  const isMerch = category.value === 'Merchandise';
+  var isMerch = category.value === 'Merchandise';
+
+  // FORM visibility
   merchFields.style.display = isMerch ? 'grid' : 'none';
-  
+
+  // Description behavior
   if (isMerch) {
     desc.value = 'MERCHANDISE';
     desc.readOnly = true;
     desc.classList.add('read-only');
+    
+    // RE-FILL the Order Number on the receipt when switching back
+    f_ord.textContent = orderNo.value; 
   } else {
     desc.value = '';
     desc.readOnly = false;
     desc.classList.remove('read-only');
   }
+
+  // RECEIPT VISIBILITY
+  setReceiptVisibility(isMerch);
+
   syncReceipt();
+}
+
+function setReceiptVisibility(isMerch) {
+  // Order + merch info display style
+  f_ord.style.display   = isMerch ? 'block' : 'none';
+  f_merch.style.display = isMerch ? 'block' : 'none';
+  f_qty.style.display   = isMerch ? 'block' : 'none';
+  f_bal.style.display   = isMerch ? 'block' : 'none';
+
+  // Payment checkmarks
+  f_down.style.display  = isMerch ? 'block' : 'none';
+  f_full.style.display  = isMerch ? 'block' : 'none';
+
+  if (!isMerch) {
+    // Clear text to avoid ghost data when in "Others" mode
+    f_ord.textContent = '';
+    f_merch.textContent = '';
+    f_qty.textContent = '';
+    f_bal.textContent = '';
+    f_down.textContent = '';
+    f_full.textContent = '';
+  }
 }
 
 /* ================= 3. RECEIPT SYNC ================= */
@@ -401,7 +447,7 @@ function downloadImage() {
     link.click();
   });
 }
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFXhAYXuAwGSZ-BerdI45uKrLS_K1xAEFtRxlKNwyi-tU1aboYWSo15iJGVuA2yUtq/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkFRrv_vLbLZRLryjFV8017cW1Xh-YZAmEp8fSPGyrodTj2hP5-L5czILejX3vEtqB/exec';
 
 function saveToSheets(receiptData) {
     fetch(SCRIPT_URL, {
@@ -446,10 +492,55 @@ function saveToSheets(receiptData) {
 
     saveToSheets(receiptData);
 }
+
+  async function saveAndSync() {
+    // Collect Merch Rows
+    let merchSummary = "";
+    document.querySelectorAll('#merch-body tr').forEach(row => {
+        const qty = row.cells[0]?.innerText || "";
+        const item = row.cells[1]?.innerText || "";
+        if(item.trim() !== "") merchSummary += `${qty}x ${item} | `;
+    });
+
+    // Checkbox logic
+    const modes = [];
+    if(document.getElementById('downpayment').checked) modes.push("Downpayment");
+    if(document.getElementById('fullpayment').checked) modes.push("Full Payment");
+
+    const payload = {
+        receiptCode: document.getElementById('receiptCode').value,
+        date: document.getElementById('date').value,
+        receivedFrom: document.getElementById('receivedFrom').value,
+        amountInNumber: document.getElementById('amountNum').value,
+        amountInWords: document.getElementById('amountWords').value,
+        description: document.getElementById('description').value,
+        receivedBy: document.getElementById('receivedBy').value,
+        orderNumber: document.getElementById('orderCode').value || "N/A",
+        merch: merchSummary,
+        modeOfPayment: modes.join(" & "),
+        balance: document.getElementById('balanceNum').value || "0"
+    };
+
+    // Save to Google
+    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+
+    // Update global counters ONLY if it's a new entry
+    if (!isEditing) {
+        rNum++;
+        if (payload.orderNumber !== "N/A") oNum++;
+        localStorage.setItem('rNum', rNum);
+        localStorage.setItem('oNum', oNum);
+    }
+
+    alert("Sync Complete!");
+    isEditing = false;
+    location.reload(); // Refresh to update the list
+}
 // Start app
 init();
 </script>
 </body>
 </html>
+
 
 
