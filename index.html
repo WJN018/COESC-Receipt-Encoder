@@ -159,40 +159,31 @@ We need to tell the printer to hide everything except the #print-area. Your curr
 CSS
 
 @media print {
-    /* Set physical paper size to A6 Landscape */
-    @page { 
-        size: 148mm 105mm; 
-        margin: 0; 
-    }
+  /* 1. Hide the entire UI (Header, Form, Buttons) */
+  body > *:not(#print-area) {
+    display: none !important;
+  }
 
-    /* Hide the entire web interface */
-    body * { 
-        visibility: hidden !important; 
-    }
+  /* 2. Position the receipt perfectly for A6 */
+  @page {
+    size: 148mm 105mm;
+    margin: 0;
+  }
 
-    /* Show ONLY the receipt container and its content */
-    #print-area, #print-area * { 
-        visibility: visible !important; 
-    }
+  #print-area {
+    margin: 0;
+    padding: 0;
+    display: block !important;
+  }
 
-    #print-area {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 148mm;
-        height: 105mm;
-        display: block !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    #receipt-container {
-        width: 148mm !important;
-        height: 105mm !important;
-        box-shadow: none !important;
-        border: none !important;
-        position: relative !important;
-    }
+  #receipt-container {
+    box-shadow: none !important; /* Removes the shadow on paper */
+    width: 148mm !important;
+    height: 105mm !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
 }
 </style>
 </head>
@@ -573,6 +564,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
