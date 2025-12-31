@@ -270,8 +270,7 @@ window.onload = function() {
     // Check if we arrived here from the "Load" button in records.html
     const editData = localStorage.getItem('edit_record');
     if (editData) {
-        const data = JSON.parse(editData);
-        viewRecord(data); // Fill the form
+        const data = JSON.parse(editData); // Fill the form
         localStorage.removeItem('edit_record'); // Clear it so it doesn't stay forever
         alert("Record Loaded! You can now Print, Save as PNG, or Edit and Save.");
     }
@@ -299,7 +298,6 @@ function init() {
     genIds();
     applyPositions();
     toggleFields();
-    refreshList();
 }
 function applyPositions() {
     Object.keys(pos).forEach(id => {
@@ -362,7 +360,16 @@ function toWords(num) {
 }
 
 function syncReceipt() {
-    const d = new Date(document.getElementById('date').value);
+    const dateVal = document.getElementById('date').value;
+if (dateVal) {
+    const d = new Date(dateVal);
+    document.getElementById('f_date').textContent =
+        (d.getMonth() + 1) + "/" + d.getDate();
+} else {
+    document.getElementById('f_date').textContent = "";
+}
+
+
     document.getElementById('f_date').textContent = (d.getMonth() + 1) + "/" + d.getDate();
     document.getElementById('f_from').textContent = document.getElementById('receivedFrom').value.toUpperCase();
     document.getElementById('f_by').textContent = document.getElementById('receivedBy').value.toUpperCase();
@@ -433,93 +440,33 @@ async function saveReceipt() {
         
         // UI Updates
         resetForm();
-        genIds();
-        
-        // If you are on the same page, this refreshes the list
-        if (typeof refreshList === "function") refreshList();
+        genIds();;
         
     } catch (e) {
         alert("Error saving: " + e.message);
     }
 }
 
-function refreshList() {
-    const listTable = document.getElementById('records');
-    if (!listTable) return;
-
-    listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>🔄 Syncing with Google Sheets...</td></tr>";
-
-    fetch(SCRIPT_URL)
-        .then(res => res.json())
-        .then(data => {
-            listTable.innerHTML = ""; 
-            
-            if (!data || data.length === 0) {
-                listTable.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No records found in Cloud.</td></tr>";
-                return;
-            }
-
-            // Shows newest receipts at the top
-            data.reverse().forEach(rec => {
-                const row = document.createElement('tr');
-                
-                // Smart Description: Shows Merch/Order info if available, otherwise regular description
-                let detailText = (rec.orderNumber && rec.orderNumber !== "N/A") 
-                    ? `<strong>${rec.orderNumber}</strong>: ${rec.merch}` 
-                    : rec.description;
-
-                // Format amount to 2 decimal places
-                const formattedAmt = parseFloat(rec.amountInNumber).toLocaleString(undefined, {minimumFractionDigits: 2});
-
-                row.innerHTML = `
-                    <td>
-                        <strong>${rec.receiptCode}</strong><br>
-                        <small>${new Date(rec.date).toLocaleDateString()}</small>
-                    </td>
-                    <td>${rec.receivedFrom}</td>
-                    <td>
-                        ₱${formattedAmt}<br>
-                        <small style="color: ${parseFloat(rec.balance) > 0 ? 'red' : 'green'};">
-                            Bal: ₱${parseFloat(rec.balance).toFixed(2)}
-                        </small>
-                    </td>
-                    <td>
-                        ${detailText}<br>
-                        <small><i>By: ${rec.receivedBy}</i></small>
-                    </td>
-                    <td>
-                        <button class="view-btn" style="background:#003366; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" 
-                        onclick='viewRecord(${JSON.stringify(rec)})'>View</button>
-                    </td>
-                `;
-                listTable.appendChild(row);
-            });
-        })
-        .catch(err => {
-            listTable.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>⚠️ Failed to load list. Check SCRIPT_URL.</td></tr>";
-            console.error("List Fetch Error:", err);
-        });
-}
-
-function viewRecord(data) {
-    isEditing = true;
-    document.getElementById('receiptCode').value = data.receiptCode;
-    document.getElementById('date').value = new Date(data.date).toISOString().split('T')[0];
-    document.getElementById('receivedFrom').value = data.receivedFrom;
-    document.getElementById('amount').value = data.amountInNumber;
-    document.getElementById('receivedBy').value = data.receivedBy;
-    document.getElementById('desc').value = data.description;
-    document.getElementById('orderNo').value = data.orderNumber;
-    document.getElementById('merchItem').value = data.merch;
-    document.getElementById('balance').value = data.balance;
-    syncReceipt();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 function resetForm() {
-    ["receivedFrom", "amount", "receivedBy", "merchItem", "balance", "desc"].forEach(id => document.getElementById(id).value = "");
+    isEditing = false;
+
+    document.getElementById('category').value = "Merchandise";
+    toggleFields();
+
+    [
+        "receivedFrom",
+        "amount",
+        "receivedBy",
+        "merchItem",
+        "balance",
+        "desc",
+        "orderNo"
+    ].forEach(id => document.getElementById(id).value = "");
+
     document.getElementById('modeDown').checked = false;
     document.getElementById('modeFull').checked = false;
+
+    genIds();
     syncReceipt();
 }
 
@@ -554,6 +501,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
