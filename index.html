@@ -150,30 +150,38 @@ th{background:var(--primary);color:#fff;}
 
 /* PRINT SETTINGS */
 @media print {
-  /* 1. Hide the entire UI (Header, Form, Buttons) */
+  /* Hide everything else on the page */
   body > *:not(#print-area) {
     display: none !important;
   }
 
-  /* 2. Position the receipt perfectly for A6 */
+  /* Show the receipt container and everything inside it */
+  #print-area,
+  #print-area * {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /* Position the receipt exactly at the top-left of the page */
+  #receipt-container {
+    width: 148mm !important;   /* A6 width */
+    height: 105mm !important;  /* A6 height */
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    box-shadow: none !important; /* Remove shadow on print */
+  }
+
+  /* Remove margins/padding of the print area */
+  #print-area {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Set the page size to A6 exactly */
   @page {
     size: 148mm 105mm;
     margin: 0;
-  }
-
-  #print-area {
-    margin: 0;
-    padding: 0;
-    display: block !important;
-  }
-
-  #receipt-container {
-    box-shadow: none !important; /* Removes the shadow on paper */
-    width: 148mm !important;
-    height: 105mm !important;
-    position: absolute;
-    top: 0;
-    left: 0;
   }
 }
 </style>
@@ -369,7 +377,6 @@ if (dateVal) {
     document.getElementById('f_date').textContent = "";
 }
 
-
     document.getElementById('f_date').textContent = (d.getMonth() + 1) + "/" + d.getDate();
     document.getElementById('f_from').textContent = document.getElementById('receivedFrom').value.toUpperCase();
     document.getElementById('f_by').textContent = document.getElementById('receivedBy').value.toUpperCase();
@@ -391,7 +398,6 @@ if (dateVal) {
     const amt = document.getElementById('amount').value;
     document.getElementById('f_amtNum').textContent = amt ? Number(amt).toFixed(2) : "0.00";
     document.getElementById('f_amtWord').textContent = amt ? toWords(Math.floor(amt)) : "ZERO";
-    applyPositions();
 }
 
 async function saveReceipt() {
@@ -501,6 +507,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
