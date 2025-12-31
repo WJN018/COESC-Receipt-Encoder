@@ -150,36 +150,23 @@ th{background:var(--primary);color:#fff;}
 
 /* PRINT SETTINGS */
 @media print {
-    /* 1. Hide everything except the print area */
-    body * {
-        visibility: hidden;
-    }
-    
-    #print-area, #print-area * {
-        visibility: visible;
+    @page {
+        size: 148mm 105mm; /* Exact A6 Landscape dimensions */
+        margin: 0;         /* Removes "Header/Footer" text from the print */
     }
 
-    /* 2. Position the receipt at the very top left of the paper */
-    #print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        display: flex;
-        justify-content: center;
+    body {
+        margin: 0;
+        padding: 0;
     }
 
     #receipt-container {
+        width: 148mm !important;
+        height: 105mm !important;
         box-shadow: none !important;
-        border: none !important;
-        /* Force background images/colors to show in Chrome/Safari */
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    /* 3. Hide buttons and headers during print */
-    .container > *:not(#print-area) {
-        display: none !important;
+        position: absolute;
+        top: 0;
+        left: 0;
     }
 }
 </style>
@@ -556,6 +543,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
