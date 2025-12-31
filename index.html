@@ -120,29 +120,22 @@ th,td{padding:12px 10px;border-bottom:1px solid #ddd;text-align:left;}
 th{background:var(--primary);color:#fff;}
 
 /* RECEIPT PREVIEW */
-  #print-area {
-  margin: 0;
-  padding: 0;
-  display: block;
-}
-
+ /* RECEIPT PREVIEW */
+#print-area{margin-top:40px;display:flex;justify-content:center;}
 #receipt-container {
-  width: 148mm;   /* TRUE A6 */
-  height: 105mm;  /* TRUE A6 */
-  margin: 0;
-  padding: 0;
+  width: var(--a6-width);
+  height: var(--a6-height);
   position: relative;
-
-  background-color: #ffffff;
+  box-shadow: 0 0 20px rgba(0,0,0,.15);
+  /* Remove the background line from here if you are using bg-data.js */
+  background-color: #ffffff; 
+  background-size: contain;
   background-repeat: no-repeat;
-  background-size: 100% 100%;
   background-position: center;
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
-  
-  box-shadow: 0 0 20px rgba(0,0,0,.15);
 }
 
 /* POSITIONING CLASSES */
@@ -193,14 +186,8 @@ th{background:var(--primary);color:#fff;}
     box-shadow: none !important;
   }
 
-  /* 🔑 THIS IS THE MISSING PIECE */
-  .receipt-bg {
-    visibility: visible !important;
-  }
-
   .field {
     position: absolute !important;
-    visibility: visible !important;
   }
 
   @page {
@@ -208,6 +195,7 @@ th{background:var(--primary);color:#fff;}
     margin: 0;
   }
 }
+
   
 </style>
 </head>
@@ -563,6 +551,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
