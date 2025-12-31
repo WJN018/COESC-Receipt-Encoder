@@ -7,26 +7,88 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="bg-data.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  
 
 <style>
 /* ================= CSS STYLES ================= */
-:root{
-  --primary:#003366;
-  --secondary:#f4f4f9;
-  --radius:8px;
-  --a6-width:794px;
-  --a6-height:559px;
+:root {
+  --primary: #003366;
+  --secondary: #f4f4f9;
+  --radius: 8px;
+  --poppins: 'Poppins', sans-serif; /* Define Poppins variable */
 }
-body{margin:0;padding:20px;font-family:'Segoe UI',Tahoma,Verdana,sans-serif;background:var(--secondary);color:#333;}
-.container{max-width:1200px;margin:auto;background:#fff;padding:25px;border-radius:var(--radius);box-shadow:0 4px 15px rgba(0,0,0,.1);} 
-header{text-align:center;margin-bottom:30px;border-bottom:2px solid var(--primary);padding-bottom:15px;}
-h1{margin:0;color:var(--primary);text-transform:uppercase;}
-label{font-size:14px;font-weight:600;display:block;margin-bottom:5px;}
-input,select{width:100%;padding:10px;border:1px solid #ccc;border-radius:4px;font-size:14px;}
-.read-only{background:#e9ecef;cursor:not-allowed;}
-.form-section{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-.full{grid-column:1/-1;}
-.checkbox-group{display:flex;gap:15px;align-items:center;}
+
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: var(--poppins); /* Changed from Segoe UI */
+  background: var(--secondary);
+  color: #333;
+}
+
+/* Ensure all interactive elements inherit Poppins */
+input, select, button, label, h1 {
+  font-family: var(--poppins);
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 15px rgba(0,0,0,.1);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 15px;
+}
+
+h1 {
+  margin: 0;
+  color: var(--primary);
+  text-transform: uppercase;
+  font-weight: 700; /* Made slightly bolder for Poppins style */
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.read-only {
+  background: #e9ecef;
+  cursor: not-allowed;
+}
+
+.form-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.checkbox-group {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
 
 /* BUTTONS */
 .btn-group{display:flex;gap:10px;margin-top:20px;}
@@ -442,6 +504,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
