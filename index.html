@@ -149,15 +149,6 @@ th{background:var(--primary);color:#fff;}
 }
 
 /* PRINT SETTINGS */
-It looks like your finalPrint() or downloadImage() logic is capturing the entire container instead of just the #receipt-container. This is why your buttons and form fields are showing up in the print and PNG.
-
-Here is the precise fix to isolate the receipt and correct the dimensions for printing.
-
-1. The CSS Fix (Isolating the Receipt for Print)
-We need to tell the printer to hide everything except the #print-area. Your current CSS might be too broad. Use this targeted version:
-
-CSS
-
 @media print {
   /* 1. Hide the entire UI (Header, Form, Buttons) */
   body > *:not(#print-area) {
@@ -564,6 +555,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
