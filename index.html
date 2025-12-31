@@ -260,14 +260,22 @@ window.onload = function() {
 };
 
 function init() {
-    // Set HD Background
+    // Set HD Background using your specific variable name
     const bg = document.getElementById('hd-bg');
-    if (bg && typeof receiptBase64 !== 'undefined') bg.src = receiptBase64;
+    if (bg && typeof receiptBase64 !== 'undefined') {
+        bg.src = receiptBase64; 
+    } else {
+        console.error("Variable 'receiptBase64' not found. Check bg-data.js");
+    }
+
+    // Remove any CSS background to prevent doubling/conflicts
     document.getElementById('receipt-container').style.background = "none";
 
     // Set Default Date
     const dateInput = document.getElementById('date');
-    if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+    if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
 
     genIds();
     applyPositions();
@@ -508,6 +516,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
