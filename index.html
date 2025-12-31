@@ -121,9 +121,13 @@ th{background:var(--primary);color:#fff;}
 #receipt-container {
   width: var(--a6-width);
   height: var(--a6-height);
-  /* Ensure this file is in the same folder! */
   position: relative;
   box-shadow: 0 0 20px rgba(0,0,0,.15);
+  /* Remove the background line from here if you are using bg-data.js */
+  background-color: #ffffff; 
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
   image-rendering: -webkit-optimize-contrast;
@@ -504,6 +508,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
