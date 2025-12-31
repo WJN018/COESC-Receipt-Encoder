@@ -150,40 +150,37 @@ th{background:var(--primary);color:#fff;}
 
 /* PRINT SETTINGS */
 @media print {
-  /* Hide everything else on the page */
+
   body > *:not(#print-area) {
     display: none !important;
   }
 
-  /* Show the receipt container and everything inside it */
-  #print-area,
-  #print-area * {
+  #print-area {
     display: block !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  #receipt-container {
+    width: 148mm !important;
+    height: 105mm !important;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    box-shadow: none !important;
+  }
+
+  .field {
+    position: absolute !important;
     visibility: visible !important;
   }
 
-  /* Position the receipt exactly at the top-left of the page */
-  #receipt-container {
-    width: 148mm !important;   /* A6 width */
-    height: 105mm !important;  /* A6 height */
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    box-shadow: none !important; /* Remove shadow on print */
-  }
-
-  /* Remove margins/padding of the print area */
-  #print-area {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Set the page size to A6 exactly */
   @page {
     size: 148mm 105mm;
     margin: 0;
   }
 }
+
 </style>
 </head>
 <body>
@@ -368,37 +365,69 @@ function toWords(num) {
 }
 
 function syncReceipt() {
-    const dateVal = document.getElementById('date').value;
-if (dateVal) {
-    const d = new Date(dateVal);
-    document.getElementById('f_date').textContent =
-        (d.getMonth() + 1) + "/" + d.getDate();
-} else {
-    document.getElementById('f_date').textContent = "";
-}
 
-    document.getElementById('f_date').textContent = (d.getMonth() + 1) + "/" + d.getDate();
-    document.getElementById('f_from').textContent = document.getElementById('receivedFrom').value.toUpperCase();
-    document.getElementById('f_by').textContent = document.getElementById('receivedBy').value.toUpperCase();
-    document.getElementById('f_desc').textContent = document.getElementById('desc').value.toUpperCase();
-    document.getElementById('f_code').textContent = document.getElementById('receiptCode').value.split('-').pop();
+    // ---- DATE ----
+    const dateInput = document.getElementById('date').value;
+    let d = null;
 
-    const isMerch = document.getElementById('category').value === 'Merchandise';
-    if (isMerch) {
-        document.getElementById('f_ord').textContent = document.getElementById('orderNo').value;
-        document.getElementById('f_merch').textContent = document.getElementById('merchItem').value.toUpperCase();
-        document.getElementById('f_qty').textContent = document.getElementById('qty').value;
-        document.getElementById('f_bal').textContent = document.getElementById('balance').value ? "₱ " + Number(document.getElementById('balance').value).toFixed(2) : "";
-        document.getElementById('f_down').textContent = document.getElementById('modeDown').checked ? "✔" : "";
-        document.getElementById('f_full').textContent = document.getElementById('modeFull').checked ? "✔" : "";
+    if (dateInput) {
+        d = new Date(dateInput);
+        document.getElementById('f_date').textContent =
+            (d.getMonth() + 1) + "/" + d.getDate();
     } else {
-        ["f_ord", "f_merch", "f_qty", "f_bal", "f_down", "f_full"].forEach(id => document.getElementById(id).textContent = "");
+        document.getElementById('f_date').textContent = "";
     }
 
+    // ---- BASIC FIELDS ----
+    document.getElementById('f_from').textContent =
+        document.getElementById('receivedFrom').value.toUpperCase();
+
+    document.getElementById('f_by').textContent =
+        document.getElementById('receivedBy').value.toUpperCase();
+
+    document.getElementById('f_desc').textContent =
+        document.getElementById('desc').value.toUpperCase();
+
+    document.getElementById('f_code').textContent =
+        document.getElementById('receiptCode').value.split('-').pop();
+
+    // ---- MERCH FIELDS ----
+    const isMerch = document.getElementById('category').value === 'Merchandise';
+
+    if (isMerch) {
+        document.getElementById('f_ord').textContent =
+            document.getElementById('orderNo').value;
+
+        document.getElementById('f_merch').textContent =
+            document.getElementById('merchItem').value.toUpperCase();
+
+        document.getElementById('f_qty').textContent =
+            document.getElementById('qty').value;
+
+        document.getElementById('f_bal').textContent =
+            document.getElementById('balance').value
+                ? "₱ " + Number(document.getElementById('balance').value).toFixed(2)
+                : "";
+
+        document.getElementById('f_down').textContent =
+            document.getElementById('modeDown').checked ? "✔" : "";
+
+        document.getElementById('f_full').textContent =
+            document.getElementById('modeFull').checked ? "✔" : "";
+    } else {
+        ["f_ord","f_merch","f_qty","f_bal","f_down","f_full"]
+            .forEach(id => document.getElementById(id).textContent = "");
+    }
+
+    // ---- AMOUNT ----
     const amt = document.getElementById('amount').value;
-    document.getElementById('f_amtNum').textContent = amt ? Number(amt).toFixed(2) : "0.00";
-    document.getElementById('f_amtWord').textContent = amt ? toWords(Math.floor(amt)) : "ZERO";
+    document.getElementById('f_amtNum').textContent =
+        amt ? Number(amt).toFixed(2) : "0.00";
+
+    document.getElementById('f_amtWord').textContent =
+        amt ? toWords(Math.floor(amt)) : "ZERO";
 }
+
 
 async function saveReceipt() {
     const category = document.getElementById('category').value;
@@ -507,6 +536,7 @@ function downloadImage() {
 </script>
 </body>
 </html>
+
 
 
 
