@@ -260,29 +260,29 @@ window.onload = function() {
 };
 
 function init() {
-    // Set HD Background using your specific variable name
+    // Force the image to load the Base64 data
     const bg = document.getElementById('hd-bg');
     if (bg && typeof receiptBase64 !== 'undefined') {
-        bg.src = receiptBase64; 
+        bg.src = receiptBase64;
+        console.log("Background Image Loaded Successfully");
     } else {
-        console.error("Variable 'receiptBase64' not found. Check bg-data.js");
+        console.error("receiptBase64 is missing! Check your bg-data.js file.");
     }
 
-    // Remove any CSS background to prevent doubling/conflicts
-    document.getElementById('receipt-container').style.background = "none";
+    // Ensure the container itself is transparent so the image behind it shows
+    const container = document.getElementById('receipt-container');
+    container.style.backgroundColor = "white"; // Solid white base
+    container.style.backgroundImage = "none";  // Remove CSS background to avoid conflicts
 
-    // Set Default Date
+    // Default Date & IDs
     const dateInput = document.getElementById('date');
-    if (dateInput && !dateInput.value) {
-        dateInput.value = new Date().toISOString().split('T')[0];
-    }
+    if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
 
     genIds();
     applyPositions();
     toggleFields();
     refreshList();
 }
-
 function applyPositions() {
     Object.keys(pos).forEach(id => {
         const e = document.getElementById(id);
@@ -508,26 +508,22 @@ function resetForm() {
 function downloadImage() {
     const container = document.getElementById('receipt-container');
     
-    // Show a small console log to track progress
-    console.log("Capturing receipt...");
-
     html2canvas(container, { 
-        scale: 3,             // High resolution for printing
-        useCORS: true,        // Support cross-origin
-        allowTaint: true,     // Essential for Base64 strings
-        backgroundColor: "#ffffff",
-        logging: false        // Set to true if you need to debug errors
+        scale: 3, 
+        useCORS: true, 
+        allowTaint: true, // This allows the Base64 image to be captured
+        logging: true     // Helps us see errors in the F12 console
     }).then(canvas => {
         const link = document.createElement('a');
-        const code = document.getElementById('receiptCode').value || "Receipt";
-        link.download = code + '.png';
-        link.href = canvas.toDataURL('image/png', 1.0);
+        link.download = document.getElementById('receiptCode').value + '.png';
+        link.href = canvas.toDataURL("image/png");
         link.click();
     });
 }
 </script>
 </body>
 </html>
+
 
 
 
