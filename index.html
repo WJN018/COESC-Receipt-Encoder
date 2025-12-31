@@ -506,16 +506,29 @@ function resetForm() {
 }
 
 function downloadImage() {
-    html2canvas(document.getElementById('receipt-container'), { scale: 3 }).then(canvas => {
+    const container = document.getElementById('receipt-container');
+    
+    // Show a small console log to track progress
+    console.log("Capturing receipt...");
+
+    html2canvas(container, { 
+        scale: 3,             // High resolution for printing
+        useCORS: true,        // Support cross-origin
+        allowTaint: true,     // Essential for Base64 strings
+        backgroundColor: "#ffffff",
+        logging: false        // Set to true if you need to debug errors
+    }).then(canvas => {
         const link = document.createElement('a');
-        link.download = document.getElementById('receiptCode').value + '.png';
-        link.href = canvas.toDataURL();
+        const code = document.getElementById('receiptCode').value || "Receipt";
+        link.download = code + '.png';
+        link.href = canvas.toDataURL('image/png', 1.0);
         link.click();
     });
 }
 </script>
 </body>
 </html>
+
 
 
 
